@@ -32,7 +32,7 @@
 			}
 
 			.login_bt {
-				background-color: #4CAF50;
+				background-color: #66ccff;
 				color: white;
 				padding: 14px 20px;
 				margin: 8px 0;
@@ -273,7 +273,7 @@
 								questionList = jQuery.parseJSON(JSON.stringify(result)).questions;
 								ClickQuestion(questionList[0]);
 								for(var i=0; i<questionList.length; i++){
-									navContent += '<a href="#" id="link'+i+'">Question ' + (i+1) + '</a>';
+									navContent += '<a href="#" id="link'+i+'" onclick="warning()">Question ' + (i+1) + '</a>';
 									//navContent += "<a href='#' onclick='ClickQuestion("+ questionList[i] +");'>Question" + i + "</a>";
 								}
 								$("#sidenav").html(navContent);
@@ -372,6 +372,10 @@
 						$("#option-"+i).attr("disabled",true);
 					}
 				}
+			}
+			
+			function warning(){
+				alert("Please follow the sequence!");
 			}
 			
 			function subAll(){
