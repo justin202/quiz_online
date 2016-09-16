@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>Quiz Online</title>
+		
+        <script src="jquery-3.1.0.min.js"></script>
+		
+		<style>
+			form {
+				border: 3px solid #f1f1f1;
+				width:80%;
+				margin-left: auto;
+				margin-right: auto;
+			}
+			
+			.reportDiv{
+				border: 3px solid #f1f1f1;
+				width:80%;
+				margin-left: auto;
+				margin-right: auto;
+			}
+
+			input[type=text] {
+				width: 100%;
+				padding: 12px 20px;
+				margin: 8px 0;
+				display: inline-block;
+				border: 1px solid #ccc;
+				box-sizing: border-box;
+			}
+
+			.login_bt {
+				background-color: #4CAF50;
+				color: white;
+				padding: 14px 20px;
+				margin: 8px 0;
+				border: none;
+				cursor: pointer;
+				width: 100%;
+			}
+
+			.container {
+				padding: 16px;
+				
+			}
+			.containerHidden {
+				padding: 16px;
+				display: none;
+				background-color:#f1f1f1;
+				
+			}
+			
+			.quizHeader{
+				padding: 16px;
+				background-color:#66ccff;
+			}
+			
+			.sidenav{
+				height:100%;
+				width:200px;
+				background-color:#fff;
+				position:fixed!important;
+				z-index:1;
+				overflow:auto;
+				position:relative;-webkit-animation:animateleft 0.4s;
+				animation:animateleft 0.4s
+			}
+			
+			.sidenav a{
+				text-decoration:none!important;
+				-webkit-transition:background-color .3s,color .15s,box-shadow .3s,opacity 0.3s;
+				transition:background-color .3s,color .15s,box-shadow .3s,opacity 0.3s;
+				padding:4px 2px 4px 16px;
+				display:block;
+				
+			}
+			
+			.sidenav a:hover{background-color:#ccc}
+			
+			.question_container ul{
+			  list-style: none;
+			  height: 100%;
+			  width: 100%;
+			  margin: 0;
+			  padding: 0;
+			}
+
+
+			ul li{
+			  color: #AAAAAA;
+			  display: block;
+			  position: relative;
+			  float: left;
+			  width: 100%;
+			  height: 100px;
+				border-bottom: 1px solid #111111;
+			}
+
+			ul li input[type=radio]{
+			  position: absolute;
+			  visibility: hidden;
+			}
+
+			ul li label{
+			  display: block;
+			  position: relative;
+			  font-weight: 300;
+			  font-size: 1.35em;
+			  padding: 25px 25px 25px 80px;
+			  margin: 10px auto;
+			  height: 30px;
+			  z-index: 9;
+			  cursor: pointer;
+			  -webkit-transition: all 0.25s linear;
+			}
+
+			ul li:hover label{
+				color: #99ccff;
+			}
+
+			ul li .check{
+			  display: block;
+			  position: absolute;
+			  border: 5px solid #AAAAAA;
+			  border-radius: 100%;
+			  height: 25px;
+			  width: 25px;
+			  top: 30px;
+			  left: 20px;
+				z-index: 5;
+				transition: border .25s linear;
+				-webkit-transition: border .25s linear;
+			}
+
+			ul li:hover .check {
+			  border: 5px solid #99ccff;
+			}
+
+			ul li .check::before {
+			  display: block;
+			  position: absolute;
+				content: '';
+			  border-radius: 100%;
+			  height: 15px;
+			  width: 15px;
+			  top: 5px;
+				left: 5px;
+			  margin: auto;
+				transition: background 0.25s linear;
+				-webkit-transition: background 0.25s linear;
+			}
+
+			input[type=radio]:checked ~ .check {
+			  border: 5px solid #ff9900;
+			}
+
+			input[type=radio]:checked ~ .check::before{
+			  background: #ff9900;
+			}
+
+			input[type=radio]:checked ~ label{
+			  color: #ff9900;
+			}
+			
+			.sub_bt {
+				background-color: #66ccff;
+				border: none;
+				color: white;
+				padding: 15px 32px;
+				text-align: center;
+				text-decoration: none;
+				display: inline-block;
+				font-size: 16px;
+				margin: 4px 2px;
+				cursor: pointer;
+			}
+			
+			table tr:nth-child(odd) {
+				background-color: #eee;
+			}
+			table tr:nth-child(even) {
+			   background-color:#fff;
+			}
+			table caption {
+				background-color: #66ccff;
+				color: white;
+			}
+
+			span.psw {
+				float: right;
+				padding-top: 16px;
+			}
+
+			/* Change styles for span and cancel button on extra small screens */
+			@media screen and (max-width: 300px) {
+				span.psw {
+				   display: block;
+				   float: none;
+				}
+			}
+		</style>
+
+		<script type="text/javascript">
+		
+			var questionList;
+			var questions = [] ;
+			var answers = [];
+			var colors = [];
+			
+			var userDetail;
+			
+			function login(){
+			
+				// validate data
+				var name = $("#login-username").val();
+				var email = $("#login-email").val();
+				var dob = $("#login-dob").val();
+				var data = "name=" + name + "&email=" + email + "&dob=" + dob;
+				userDetail = name ;
+				
+				var flag;
+				
+				// email
+				var emailpatterns = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/;
+				//dob
+				var datepatterns = /(?:0[1-9]|[12][0-9]|3[01])\/(?:0[1-9]|1[0-2])\/((?:19|20)\d{2})/;
+				
+				if(name==""){
+					$("#login-username").css('color', 'red');
+					$("#login-username").val("Please enter a name!");
+					flag = false;
+				}else{
+					flag = true;
+				}
+				
+				
+				if(!emailpatterns.test(email)){
+					$("#login-email").css('color', 'red');
+					$("#login-email").val("Please use a validate email address!");
+					flag = flag && false;
+				}
+				
+				if(!datepatterns.test(dob)){
+					$("#login-dob").css('color', 'red');
+					$("#login-dob").val("Please use a validate DOB!");
+					flag = flag && false;
+				}
+				
+				// post request
+				var url = "http://turing.une.edu.au/~jbisho23/assignment2/register.php";
+				
+				if(flag){
+					$.ajax({ 
+						method: 'POST', 
+						data: data,
+						url: url, 
+						dataType: 'json'
+					})
+					.done(function(result){
+						var res = jQuery.parseJSON(JSON.stringify(result));
+						console.log(res.user_id);
+						userDetail += "," + res.user_id + "," + email + "," + dob;
+						$("#loginDiv").fadeOut();
+						$("#quizDiv").fadeIn();
+						$("#welcomeLab").text("Hi, " + res.user_id);
+						// request quiz list
+						var navContent = "";
+						$.ajax({
+							url: "http://turing.une.edu.au/~jbisho23/assignment2/quiz.php",
+							success: function(result){
+								questionList = jQuery.parseJSON(JSON.stringify(result)).questions;
+								ClickQuestion(questionList[0]);
+								for(var i=0; i<questionList.length; i++){
+									navContent += '<a href="#" id="link'+i+'">Question ' + (i+1) + '</a>';
+									//navContent += "<a href='#' onclick='ClickQuestion("+ questionList[i] +");'>Question" + i + "</a>";
+								}
+								$("#sidenav").html(navContent);
+							}
+						});
+					});
+				}else{
+					$("#containerHidden").show();
+					$("#msg").text("error: description or error");
+				}
+				
+			}
+			
+			var link_index = 1;
+			function ClickQues(){
+					
+					var id = questionList[link_index++];
+					ClickQuestion(id);
+					
+					$("#tick_img").hide();
+					$("#cross_img").hide();
+					$("#next_bt").hide();
+					
+					$("#sub_bt").show();
+					
+					//enable radio
+					for(var i = 1; i <= 4; i++){
+						$("#option-"+i).attr("disabled",false);
+						$("#option-"+i).prop('checked', false);
+					}
+			}
+			var question_index = 0;
+			function ClickQuestion(questionID){
+				
+				var url="http://turing.une.edu.au/~jbisho23/assignment2/quiz.php?q="+questionID;
+				$.ajax({
+					url: url,
+					success: function(result){
+						//console.log(result.choices.A);
+						var question = result.text;
+						$("#question_head").text("Question " +(question_index+1) +": "+ question);
+						questions[question_index++] = question;
+						$("#question_head").val(questionID);
+						
+						$("#label1").text("A. "+result.choices.A);
+						$("#label2").text("B. "+result.choices.B);
+						$("#label3").text("C. "+result.choices.C);
+						$("#label4").text("D. "+result.choices.D);
+						
+					}
+				});
+			}
+			
+			var answer_index = 0;
+			var color_index = 0;
+			var correctCount = 0;
+			function checkAnswer(){
+				var ans = "NO";
+				for(var i = 1; i <= 4; i++){
+					if($("#option-"+i).is(':checked')){
+						ans=$("#option-"+i).val();
+						answers[answer_index++] = $("#label"+i).text();
+						var id = $("#question_head").val();
+						var url = "http://turing.une.edu.au/~jbisho23/assignment2/quiz.php?q="+id+"&a="+ans;
+						$.ajax({
+							url: url,
+							success: function(result){
+								
+								if(link_index <= questionList.length){
+									if(result.correct){
+										$("#tick_img").show();
+										$("#link"+(link_index-1)).css("background", "green");
+										colors[color_index++] = "green";
+										correctCount++;
+									}else{
+										$("#cross_img").show();
+										$("#link"+(link_index-1)).css("background", "red");
+										colors[color_index++] = "red";
+									}
+									if(link_index - questionList.length != 0){
+										$("#sub_bt").hide();
+										$("#next_bt").show();
+									}else{
+										$("#sub_bt").hide();
+										$("#sub_all_bt").show();
+									}
+								}
+							}
+						});
+					}
+				}
+				if(ans=="NO"){
+					alert("Please select an answer!");
+				}else{
+					for(var i = 1; i <= 4; i++){
+						$("#option-"+i).attr("disabled",true);
+					}
+				}
+			}
+			
+			function subAll(){
+				var content="";
+				$("#quizDiv").fadeOut();
+				$("#reportDiv").show();
+				//userDetail += ",Score: " + correctCount + "/" + questionList.length;
+				userDts = userDetail.split(",");
+				
+				content += "<caption>Result</caption>";
+				
+				content +="<tr>";
+				content +="<th>UserName</th>";
+				content +="<th>"+userDts[0]+"</th>";
+				content +="</tr>";
+				
+				content +="<tr>";
+				content +="<th>UserID</th>";
+				content +="<th>"+userDts[1]+"</th>";
+				content +="</tr>";
+				
+				content +="<tr>";
+				content +="<th>Email</th>";
+				content +="<th>"+userDts[2]+"</th>";
+				content +="</tr>";
+				
+				content +="<tr>";
+				content +="<th>DOB</th>";
+				content +="<th>"+userDts[3]+"</th>";
+				content +="</tr>";
+				
+				content +="<tr>";
+				content +="<th>Score</th>";
+				content +="<th>"+(correctCount + "/" + questionList.length)+" <input type='button' onclick='showLongResult()' value='Detail'></th>";
+				content +="</tr>";
+				
+				$("#userTab").html(content);
+			
+			}
+			
+			function showLongResult(){
+				//$("#userTab").fadeOut();
+				$("#resultTab").fadeIn();
+				$("#breakDiv").fadeIn();
+				
+				var content = "";
+				content += "<caption>Long Summary</caption>";
+				content +="<tr>";
+				content +="<th>Questions</th>";
+				content +="<th>Answers</th>";
+				content +="<th>Result</th>";
+				content +="</tr>";
+				
+				for(var i = 0; i < answers.length; i++){
+				console.log(colors[i]);
+					content +="<tr>";
+					content +="<th>"+questions[i]+"</th>";
+					content +="<th>"+answers[i]+"</th>";
+					if(colors[i]=="green"){
+						content +="<th style='background:"+colors[i]+"'>Correct</th>";
+					}else{
+						content +="<th style='background:"+colors[i]+"'>Incorrect</th>";
+					}
+					content +="</tr>";
+				}
+				$("#resultTab").html(content);
+			}
+			
+			
+		</script>
+		
+    </head>
+	
+	<body>
+		<div id="loginDiv">
+			<h2>Login</h2>
+			<form role="form">
+				<div class="container">
+					<label> <b>name</b></label>
+					<input id="login-username" name="name" type="text" placeholder="">
+					
+					<label> <b>email</b></label>
+					<input id="login-email" name="email" type="text" placeholder="">
+					
+					
+					<label> <b>dob</b></label>
+					<input id="login-dob" name="dob" type="text" placeholder="dd/mm/yyyy">
+					
+					<input type="button" class="login_bt" onclick="login()" value="Login"/>
+				</div>
+				<div class="containerHidden" id="containerHidden">
+					<label id="msg" style="color: red"></label>
+				</div>
+			</form>
+			
+		</div>
+		<div id="quizDiv" style="display: none">
+			<header class="quizHeader">
+			  <h2>Quiz</h2>
+			  <label id="welcomeLab"></label>
+			</header>
+			
+			<!--<nav class="w3-sidenav w3-collapse w3-white w3-card-2 w3-animate-left" style="width:200px;" id="mySidenav">-->
+			<nav class="sidenav" style="width:200px;" id="sidenav">
+			  
+			  <a href="#">Link 1</a>
+			  <a href="#">Link 2</a>
+			  <a href="#">Link 3</a>
+			  <a href="#">Link 4</a>
+			  <a href="#">Link 5</a>
+			</nav>
+			
+			<div class="main" style="margin-left:200px;transition:margin-left .4s;">
+				<header class="w3-container w3-teal">
+				  <h2 id="question_head">Question:</h2>
+				</header>
+
+				<div class="question_container" >
+					<ul>
+					
+					  <li>
+						<input type="radio" id="option-1" name="selector" value="A">
+						<label id="label1" for="option-1">A. </label>
+						
+						<div class="check"></div>
+					  </li>
+					  
+					  <li>
+						<input type="radio" id="option-2" name="selector" value="B">
+						<label id="label2" for="option-2">B. </label>
+						
+						<div class="check"><div class="inside"></div></div>
+					  </li>
+					  
+					  <li>
+						<input type="radio" id="option-3" name="selector" value="C">
+						<label id="label3" for="option-3">C. </label>
+						
+						<div class="check"><div class="inside"></div></div>
+					  </li>
+					  
+					  <li>
+						<input type="radio" id="option-4" name="selector" value="D">
+						<label id="label4" for="option-4">D. </label>
+						
+						<div class="check"><div class="inside"></div></div>
+					  </li>
+					  
+					</ul>
+					<div style="margin-left: 50%">
+						<input type="button" id="sub_bt" class="sub_bt" value="Submit" onclick="checkAnswer()">
+						<img id="tick_img" src="tick.png" alt="tick" style="display:none">
+						<img id="cross_img" src="cross.png" alt="cross" style="display:none">
+						</br><input type="button" id="next_bt" class="sub_bt" value="Next" onclick="ClickQues()" style="display:none">
+						<input type="button" id="sub_all_bt" class="sub_bt" value="Submit All" onclick="subAll()" style="display:none">
+					</div>
+					
+				</div>
+			</div>
+			
+		</div>
+		
+		<div id="reportDiv" class="reportDiv" style="display: none">
+			<table id="userTab" style="width:100%">
+			
+			</table>
+			<div id="breakDiv" style="display: none"></br></br></div>
+			<table id="resultTab" style="width:100%">
+			
+			</table>
+		</div>
+		
+	</body>
+
+
+</html>
